@@ -18,3 +18,8 @@ $(FRESH):
 .PHONY: fresh
 fresh: $(FRESH)
 	fresh
+
+.PHONY: clean
+clean:
+	rm -r ./tmp
+	go clean
