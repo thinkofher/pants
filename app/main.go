@@ -15,6 +15,7 @@ const KeyLength = 7
 var keyNoValueErr = errors.New("db: there is no value assigned to given key")
 var keyTakenErr = errors.New("db: key is already taken")
 
+// RandomString generates random string with given length.
 func RandomString(length int) (string, error) {
 	return strutil.Random(chars, length)
 }
@@ -24,13 +25,13 @@ type Entry struct {
 	URL string `json:"url"`
 }
 
-func NewEntry(URL string) (*Entry, error) {
+func NewEntry(url string) (*Entry, error) {
 	key, err := RandomString(KeyLength)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Entry{Key: key, URL: URL}, nil
+	return &Entry{Key: key, URL: url}, nil
 }
 
 type DB map[string]string
@@ -42,6 +43,7 @@ func (db DB) SaveEntry(e Entry) error {
 	}
 
 	db[e.Key] = e.URL
+
 	return nil
 }
 
@@ -68,16 +70,16 @@ type URL struct {
 }
 
 func ShortURL(db *DB) echo.HandlerFunc {
-
 	var bindErr = echo.NewHTTPError(http.StatusBadRequest,
 		"Failed to parse given data.")
+
 	var shortErr = echo.NewHTTPError(http.StatusInternalServerError,
 		"Could not short given url.")
+
 	var luckyErr = echo.NewHTTPError(http.StatusInternalServerError,
 		"Could not short given url. Please try again.")
 
 	return func(c echo.Context) error {
-
 		url := &URL{Value: ""}
 		if err := c.Bind(url); err != nil {
 			return bindErr
@@ -102,6 +104,7 @@ func ShortURL(db *DB) echo.HandlerFunc {
 func GetShort(db *DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		key := c.Param("key")
+
 		entry, err := db.GetEntry(key)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError,
