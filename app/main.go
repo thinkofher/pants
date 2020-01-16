@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"regexp"
 
 	"github.com/labstack/echo"
 	"github.com/ozgio/strutil"
@@ -111,6 +112,8 @@ func GetShort(db *DB) echo.HandlerFunc {
 	}
 }
 
+const DefaultProtocol = "http://"
+
 func RedirectToShort(db *DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		url := c.Param("url")
@@ -121,8 +124,19 @@ func RedirectToShort(db *DB) echo.HandlerFunc {
 				"There is no value behind given key.")
 		}
 
-		return c.Redirect(http.StatusTemporaryRedirect, "http://"+goalURL)
+		if !HasProtocol(goalURL) {
+			return c.Redirect(http.StatusTemporaryRedirect, DefaultProtocol+goalURL)
+		}
+
+		return c.Redirect(http.StatusTemporaryRedirect, goalURL)
 	}
+}
+
+// HasProtocol checks if given url has any
+// protocol at the beginning.
+func HasProtocol(url string) bool {
+	validProtocol := regexp.MustCompile(`^[a-zA-Z]*[:][/]{2}[^/]`)
+	return validProtocol.Match([]byte(url))
 }
 
 func main() {
