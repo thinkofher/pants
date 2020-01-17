@@ -2,74 +2,69 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"regexp"
 
+	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
-	"github.com/ozgio/strutil"
 )
 
-const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+// KeyLength represents default length of keys
+// used to store values of target urls and
+// redirect clients.
 const KeyLength = 7
 
 var keyNoValueErr = errors.New("db: there is no value assigned to given key")
 var keyTakenErr = errors.New("db: key is already taken")
 
-// RandomString generates random string with given length.
-func RandomString(length int) (string, error) {
-	return strutil.Random(chars, length)
+// DB interface specifies methods for inserting
+// urls to database and retrieving them by keys.
+type DB interface {
+	// Saves Entry in database.
+	SaveEntry(e Entry) error
+	// Returns url assigned to given key.
+	GetURL(key string) (string, error)
+	// Returns full Entry (specified in API) assigned
+	// to given key.
+	GetEntry(key string) (*Entry, error)
 }
 
-type Entry struct {
-	Key string `json:"key"`
-	URL string `json:"url"`
+type redisDB struct {
+	client *redis.Client
 }
 
-func NewEntry(url string) (*Entry, error) {
-	key, err := RandomString(KeyLength)
+func (db redisDB) SaveEntry(e Entry) error {
+	err := db.client.Set(e.Key, e.URL, 0).Err()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &Entry{Key: key, URL: url}, nil
-}
-
-type DB map[string]string
-
-func (db DB) SaveEntry(e Entry) error {
-	_, ok := db[e.Key]
-	if ok {
-		return keyTakenErr
-	}
-
-	db[e.Key] = e.URL
 
 	return nil
 }
 
-func (db DB) GetURL(key string) (string, error) {
-	_, ok := db[key]
-	if !ok {
+func (db redisDB) GetURL(key string) (string, error) {
+	val, err := db.client.Get(key).Result()
+	if err != nil {
 		return "", keyNoValueErr
 	}
 
-	return db[key], nil
+	return val, nil
 }
 
-func (db DB) GetEntry(key string) (*Entry, error) {
-	value, err := db.GetURL(key)
+func (db redisDB) GetEntry(key string) (*Entry, error) {
+	val, err := db.GetURL(key)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Entry{Key: key, URL: value}, nil
+	return &Entry{Key: key, URL: val}, nil
 }
 
 type URL struct {
 	Value string `json:"value"`
 }
 
-func ShortURL(db *DB) echo.HandlerFunc {
+func ShortURL(db DB) echo.HandlerFunc {
 	var bindErr = echo.NewHTTPError(http.StatusBadRequest,
 		"Failed to parse given data.")
 
@@ -101,7 +96,7 @@ func ShortURL(db *DB) echo.HandlerFunc {
 	}
 }
 
-func GetShort(db *DB) echo.HandlerFunc {
+func GetShort(db DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		key := c.Param("key")
 
@@ -115,9 +110,7 @@ func GetShort(db *DB) echo.HandlerFunc {
 	}
 }
 
-const DefaultProtocol = "http://"
-
-func RedirectToShort(db *DB) echo.HandlerFunc {
+func RedirectToShort(db DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		url := c.Param("url")
 
@@ -135,25 +128,21 @@ func RedirectToShort(db *DB) echo.HandlerFunc {
 	}
 }
 
-// HasProtocol checks if given url has any
-// protocol at the beginning.
-func HasProtocol(url string) bool {
-	validProtocol := regexp.MustCompile(`^[a-zA-Z]*[:][/]{2}[^/]`)
-	return validProtocol.Match([]byte(url))
-}
-
 func main() {
+	// Redis initialization
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	fmt.Printf("Redis started at '%s'.\n", client.Options().Addr)
+	db := redisDB{client: client}
+
 	// Echo instance
 	e := echo.New()
 
-	db := make(DB)
-
 	// Routes
-	e.GET("/api/hello", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{
-			"value": "Hello World!",
-		})
-	})
 	e.POST("/api/short", ShortURL(&db))
 	e.GET("/api/short/:key", GetShort(&db))
 	e.GET("/:url", RedirectToShort(&db))
