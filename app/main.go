@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
-	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // KeyLength represents default length of keys
@@ -27,37 +28,6 @@ type DB interface {
 	// Returns full Entry (specified in API) assigned
 	// to given key.
 	GetEntry(key string) (*Entry, error)
-}
-
-type redisDB struct {
-	client *redis.Client
-}
-
-func (db redisDB) SaveEntry(e Entry) error {
-	err := db.client.Set(e.Key, e.URL, 0).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db redisDB) GetURL(key string) (string, error) {
-	val, err := db.client.Get(key).Result()
-	if err != nil {
-		return "", keyNoValueErr
-	}
-
-	return val, nil
-}
-
-func (db redisDB) GetEntry(key string) (*Entry, error) {
-	val, err := db.GetURL(key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Entry{Key: key, URL: val}, nil
 }
 
 type URL struct {
@@ -129,23 +99,16 @@ func RedirectToShort(db DB) echo.HandlerFunc {
 }
 
 func main() {
-	// Redis initialization
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	fmt.Printf("Redis started at '%s'.\n", client.Options().Addr)
-	db := redisDB{client: client}
+	db, _ := InitDB("./pants.sqlite3")
 
 	// Echo instance
 	e := echo.New()
+	e.Use(middleware.CORS())
 
 	// Routes
-	e.POST("/api/short", ShortURL(&db))
-	e.GET("/api/short/:key", GetShort(&db))
-	e.GET("/:url", RedirectToShort(&db))
+	e.POST("/api/short", ShortURL(db))
+	e.GET("/api/short/:key", GetShort(db))
+	e.GET("/:url", RedirectToShort(db))
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

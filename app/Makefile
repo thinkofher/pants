@@ -1,7 +1,9 @@
+APP := pants
 BIN_DIR := $(GOPATH)/bin
 LINTER := $(BIN_DIR)/golangci_lint
 FRESH := $(BIN_DIR)/fresh
 MODOFF := GO111MODULE=off
+DB := $(APP).sqlite3
 
 $(LINTER):
 	cd $(GOPATH)
@@ -21,5 +23,5 @@ fresh: $(FRESH)
 
 .PHONY: clean
 clean:
-	rm -r ./tmp
+	rm -r ./tmp $(DB)
 	go clean
