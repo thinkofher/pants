@@ -8,7 +8,3 @@ services:
             - "8080:8080"
         volumes:
             - ./app:/src/pants/app:z
-        depends_on:
-            - redis
-    redis:
-        image: "redis:alpine"
