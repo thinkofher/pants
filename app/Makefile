@@ -25,3 +25,9 @@ fresh: $(FRESH)
 clean:
 	rm -r ./tmp $(DB)
 	go clean
+
+.PHONY: view
+view:
+	cp -r ../view/elm.json ../view/src .
+	elm make src/Main.elm --output=public/main.js
+	rm -r elm.json src elm-stuff
