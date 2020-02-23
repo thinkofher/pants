@@ -23,7 +23,7 @@ fresh: $(FRESH)
 
 .PHONY: clean
 clean:
-	rm -r ./tmp $(DB)
+	rm -r ./tmp $(DB) public/main.js
 	go clean
 
 .PHONY: view
