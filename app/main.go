@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"flag"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -99,7 +101,13 @@ func RedirectToShort(db DB) echo.HandlerFunc {
 }
 
 func main() {
-	db, _ := InitDB("./pants.sqlite3")
+	port := flag.String("port", "8080", "listen port")
+	flag.Parse()
+
+	db, err := InitDB("./pants.sqlite3")
+	if err != nil {
+		log.Fatal("Could not initialised database. Terminating.")
+	}
 
 	// Echo instance
 	e := echo.New()
@@ -109,6 +117,7 @@ func main() {
 	e.POST("/api/short", ShortURL(db))
 	e.GET("/api/short/:key", GetShort(db))
 	e.GET("/:url", RedirectToShort(db))
+	e.File("/", "public/index.html")
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":" + *port))
 }
