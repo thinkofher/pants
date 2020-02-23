@@ -1,3 +1,4 @@
 tmp/*
 app
 *.sqlite3
+public/main.js

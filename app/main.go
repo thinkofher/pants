@@ -117,7 +117,9 @@ func main() {
 	e.POST("/api/short", ShortURL(db))
 	e.GET("/api/short/:key", GetShort(db))
 	e.GET("/:url", RedirectToShort(db))
+
 	e.File("/", "public/index.html")
+	e.File("/main.js", "public/main.js")
 
 	e.Logger.Fatal(e.Start(":" + *port))
 }
