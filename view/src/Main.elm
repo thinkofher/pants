@@ -198,7 +198,7 @@ shortApp model =
 
 api : String
 api =
-    "http://short.beniamindudek.xyz"
+    "http://localhost:8080"
 
 
 apiShort : String
