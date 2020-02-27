@@ -124,6 +124,7 @@ inputContainer =
         [ displayFlex
         , flexWrap Css.wrap
         , alignItems stretch
+        , margin auto
         , Css.height (px 75)
         ]
 
@@ -148,6 +149,40 @@ shortBtn =
         , Css.width (px 100)
         , margin (px 10)
         , fontFamilies [ "monospace" ]
+        , hover
+            [ backgroundColor theme.primaryDark
+            , border3 (px 2) solid theme.primaryLight
+            ]
+        ]
+
+
+linkContainer : List (Attribute msg) -> List (Html msg) -> Html msg
+linkContainer =
+    styled div
+        [ border3 (px 2) solid theme.primaryDark
+        , backgroundColor theme.primaryLight
+        , margin auto
+        , padding (px 10)
+        , fontFamilies [ "monospace" ]
+        , fontSize (px 20)
+        , color theme.secondaryDark
+        ]
+
+
+centerDiv : List (Attribute msg) -> List (Html msg) -> Html msg
+centerDiv =
+    styled div
+        [ displayFlex
+        , flexDirection column
+        ]
+
+
+shortHref : List (Attribute msg) -> List (Html msg) -> Html msg
+shortHref =
+    styled a
+        [ color theme.primaryDark
+        , hover
+            [ color theme.secondaryLight ]
         ]
 
 
@@ -174,8 +209,8 @@ shortApp model =
             text "Loading..."
 
         Failure url ->
-            div []
-                [ div [] [ text "I could not short given url for some reason." ]
+            centerDiv []
+                [ linkContainer [] [ text "I could not short given url for some reason." ]
                 , inputContainer []
                     [ urlInput [ placeholder "url to short", value url, onInput Change ] []
                     , shortBtn [ onClick (Short url) ] [ text "Short" ]
@@ -187,8 +222,11 @@ shortApp model =
                 extendedUrl =
                     api ++ "/" ++ shorted
             in
-            div []
-                [ div [] [ a [ href extendedUrl ] [ text extendedUrl ] ]
+            centerDiv []
+                [ linkContainer []
+                    [ div [] [ text "Here is your link!" ]
+                    , shortHref [ href extendedUrl ] [ text extendedUrl ]
+                    ]
                 , inputContainer []
                     [ urlInput [ placeholder "url to short", value new, onInput Change ] []
                     , shortBtn [ onClick (Short new) ] [ text "Short" ]
