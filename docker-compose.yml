@@ -10,6 +10,7 @@ services:
             - ./app:/src/pants/app:z
         depends_on:
             - view
+        command: make fresh
     view:
         build:
             context: ./view
