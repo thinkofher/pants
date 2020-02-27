@@ -22,6 +22,18 @@ Clone this repo, enter the directory and run:
 
 Voila! You are running `pants` on port `8080`. Contragulations!
 
+Containers
+----------
+
+You can easly deploy this application with provided Dockerfiles for [app](app/Dockerfile) and [view](view/Dockerfile), so you don't have to install all the dependencies and bundlers directly on your machine.
+
+`pants` also ships with [docker-compose](docker-compose.yml) file, so you can easly hack on it with:
+
+    $ docker-compose up -d
+
+or
+    $ podman-compose up -d
+
 More
 ----
 
