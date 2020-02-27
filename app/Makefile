@@ -35,3 +35,6 @@ view:
 .PHONY: build
 build:
 	go build -o $(APP)
+
+.PHONY: app
+app: view build
