@@ -6,4 +6,4 @@ COPY . .
 RUN go get -d -v ./...
 RUN go build
 
-CMD ["make", "fresh"]
+CMD ["./app"]
