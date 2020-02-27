@@ -23,7 +23,7 @@ fresh: $(FRESH)
 
 .PHONY: clean
 clean:
-	rm -r ./tmp $(DB) public/main.js
+	rm -r ./tmp $(DB) public/main.js $(APP)
 	go clean
 
 .PHONY: view
@@ -31,3 +31,7 @@ view:
 	cp -r ../view/elm.json ../view/src .
 	elm make src/Main.elm --output=public/main.js
 	rm -r elm.json src elm-stuff
+
+.PHONY: build
+build:
+	go build -o $(APP)
