@@ -30,7 +30,9 @@ main =
 type Model
     = Init String
     | Loading
+      -- failure message
     | Failure String
+      -- old url and new url
     | Success String String
 
 
@@ -113,8 +115,9 @@ mainContainer =
         , margin auto
         , textAlign center
         , backgroundColor theme.secondaryLight
-        , Css.width (px 600)
         , Css.height (Css.em 20)
+        , Css.maxWidth (px 700)
+        , Css.minWidth (px 500)
         ]
 
 
